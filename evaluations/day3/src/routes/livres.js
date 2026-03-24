@@ -13,12 +13,6 @@ const { livreCreateSchema, livreUpdateSchema } = require('../validators/livreVal
  *   get:
  *     summary: Récupérer tous les livres
  *     tags: [Livres]
- *     parameters:
- *       - in: query
- *         name: disponible
- *         schema:
- *           type: boolean
- *         description: Filtrer par disponibilité
  *     responses:
  *       200:
  *         description: Liste des livres
@@ -42,11 +36,16 @@ const { livreCreateSchema, livreUpdateSchema } = require('../validators/livreVal
  *                 type: integer
  *               genre:
  *                 type: string
+ *             required:
+ *               - titre
+ *               - auteur
  *     responses:
  *       201:
  *         description: Livre créé avec succès
  *       401:
  *         description: Non authentifié
+ *       403:
+ *         description: Accès refusé
  *
  * /api/livres/{id}:
  *   get:
@@ -94,10 +93,12 @@ const { livreCreateSchema, livreUpdateSchema } = require('../validators/livreVal
  *         description: Livre modifié avec succès
  *       401:
  *         description: Non authentifié
+ *       403:
+ *         description: Accès refusé
  *       404:
  *         description: Livre non trouvé
  *   delete:
- *     summary: Supprimer un livre
+ *     summary: Supprimer un livre (Admin uniquement)
  *     tags: [Livres]
  *     security:
  *       - bearerAuth: []
@@ -109,18 +110,13 @@ const { livreCreateSchema, livreUpdateSchema } = require('../validators/livreVal
  *           type: integer
  *     responses:
  *       204:
- *         description: Supprimé avec succès
+ *         description: Livre supprimé avec succès
  *       401:
  *         description: Non authentifié
- *       403:
- *         description: Droits insuffisants (admin only)
- *       404:
- *         description: Livre non trouvé
- *
  * /api/livres/{id}/emprunter:
  *   post:
  *     summary: Emprunter un livre
- *     tags: [Emprunts]
+ *     tags: [Livres]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -130,17 +126,19 @@ const { livreCreateSchema, livreUpdateSchema } = require('../validators/livreVal
  *         schema:
  *           type: integer
  *     responses:
- *       201:
+ *       200:
  *         description: Livre emprunté avec succès
  *       401:
  *         description: Non authentifié
+ *       404:
+ *         description: Livre non trouvé
  *       409:
  *         description: Livre non disponible
  *
  * /api/livres/{id}/retourner:
  *   post:
- *     summary: Retourner un livre
- *     tags: [Emprunts]
+ *     summary: Retourner un livre emprunté
+ *     tags: [Livres]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -159,13 +157,10 @@ const { livreCreateSchema, livreUpdateSchema } = require('../validators/livreVal
  */
 
 router.get('/', controller.getAll);
+router.post('/', authenticate, authorize('admin'), validate(livreCreateSchema), controller.create);
 router.get('/:id', controller.getOne);
-
-router.post('/', authenticate, validate(livreCreateSchema), controller.create);
-router.put('/:id', authenticate, validate(livreUpdateSchema), controller.update);
-
+router.put('/:id', authenticate, authorize('admin'), validate(livreUpdateSchema), controller.update);
 router.delete('/:id', authenticate, authorize('admin'), controller.delete);
-
 router.post('/:id/emprunter', authenticate, controller.emprunter);
 router.post('/:id/retourner', authenticate, controller.retourner);
 

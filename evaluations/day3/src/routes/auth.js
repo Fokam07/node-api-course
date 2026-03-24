@@ -36,6 +36,8 @@ const { registerSchema, loginSchema } = require('../validators/authValidator');
  *         description: Utilisateur créé avec succès
  *       409:
  *         description: Email déjà utilisé
+ *       400:
+ *         description: Validation échouée
  *
  * /api/auth/login:
  *   post:
@@ -60,6 +62,26 @@ const { registerSchema, loginSchema } = require('../validators/authValidator');
  *         description: Connexion réussie, token JWT retourné
  *       401:
  *         description: Identifiants invalides
+ *       400:
+ *         description: Validation échouée
+ *
+ * /api/auth/refresh:
+ *   post:
+ *     summary: Rafraîchir l'access token via le refresh token
+ *     tags: [Authentification]
+ *     responses:
+ *       200:
+ *         description: Nouvel access token généré
+ *       401:
+ *         description: Refresh token invalide ou expiré
+ *
+ * /api/auth/logout:
+ *   post:
+ *     summary: Se déconnecter et révoquer le refresh token
+ *     tags: [Authentification]
+ *     responses:
+ *       200:
+ *         description: Déconnexion réussie
  *
  * /api/auth/me:
  *   get:
@@ -76,6 +98,8 @@ const { registerSchema, loginSchema } = require('../validators/authValidator');
 
 router.post('/register', validate(registerSchema), controller.register);
 router.post('/login', validate(loginSchema), controller.login);
+router.post('/refresh', controller.refresh);
+router.post('/logout', controller.logout);
 router.get('/me', authenticate, controller.me);
 
 module.exports = router;
